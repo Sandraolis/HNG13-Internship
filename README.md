@@ -50,6 +50,7 @@ by ✅ Enabling auto-assign public IPv4 address.
 
 4. ### I created a route table and edited the routes to add
 destination: 0.0.0.0./0 traffic from anywhere and the target was IGW that I created.
+Then, I edited the subnet association and added the both into the same association.
 
 5. ### I created a Security Group and allowed two Inbound rules
 - HTTP---80---0.0.0.0/0
