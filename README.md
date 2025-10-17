@@ -35,7 +35,7 @@ I created
 - A `Security Group` (for HTTP + SSH)
 - An `EC2 instance` in that subnet running `NGINX`.
 
-1. ### I created a VPC with  Acidr block 10.0.0.0/16
+1. ### I created a VPC with a cidr block 10.0.0.0/16
 
 2. ### I created two public subnets 
 
@@ -79,7 +79,7 @@ sudo systemctl status nginx
 ``` bash
 sudo vi /var/www/html/index.html
 ```
-I pasted the `index.html` file I forked for this project and edited as instructed by my Instructor
+I pasted the content of the`index.html` file I forked for this project and edited as instructed by my Instructor
 
 9. TEST
 
