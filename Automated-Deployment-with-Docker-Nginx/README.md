@@ -7,6 +7,10 @@ Tools used:
 - GitHub – for version control and repository hosting
 - AWS EC2 Ubuntu Server – as the remote deployment target
 
+### Create a folder on Ubuntu `mkdir deployment-project` and `Cd` into it
+
+- navigate to vscode through ubuntu with this cmd `code .`
+
 ## ⚙️ Step 2 — Create and Initialize Your Repository
 
 1. On GitHub → created repo deployment-project and clone it to your local machine.
