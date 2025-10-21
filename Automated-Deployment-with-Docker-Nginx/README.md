@@ -13,7 +13,7 @@ Tools used:
 
 ## ⚙️ Step 2 — Create and Initialize Your Repository
 
-1. On GitHub → created repo deployment-project and clone it to your local machine.
+1. On GitHub → created repo deployment-project and clone it to your local machine and `cd` into the clone repo.
 
 2. Add a simple `index.html` page
 
@@ -46,7 +46,7 @@ CMD ["nginx", "-g", "daemon off;"]
 ```
 
 ## 🐳 Step 3 — Build and Test Docker Container Locally 
-NB: you can use 8080:80 if the post is available
+NB: you can use 8080:80 if the port is available
 
 ``` bash
 docker build -t test-app .
@@ -240,7 +240,7 @@ git push -u origin main
 
 1. Executed locally
 
-`` bash
+```bash
 ./deploy.sh
 ```
 
@@ -272,7 +272,7 @@ deployment-project/
  ├─ index.html
  ├─ deploy.sh
  ├─ deploy_*.log
- └─ README.md   (to document your setup)
+ └─ README.md   (to document my setup)
 ```
 
 
