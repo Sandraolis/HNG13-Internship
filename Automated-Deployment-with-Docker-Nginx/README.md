@@ -1,5 +1,249 @@
 # Automated Deployment With Docker and Nginx
 
+## 🔐 SSH Automation — Full Breakdown.
+
+Step 1 — Generate SSH Key Pair (on Local Machine)
+
+Creat an SSH key pair to allow passwordless authentication to your EC2 instance:
+
+``` bash
+ssh-keygen -t rsa -b 4096 -C "sandraolis@example.com"
+```
+
+The `"sandraolis@example.com"` The `-C` flag adds a comment or label to your SSH public key.
+It’s for identification only, and helps you know later which key belongs to which machine or purpose.
+
+So after running it, if you open your public key `(cat ~/.ssh/id_rsa.pub)`, you’ll see something like:
+
+``` bash
+ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQD... sandraolis@example.com
+```
+
+That comment `(sandraolis@example.com)` is not used for login, it’s just a note/message at the end of the key file.
+- The comment is also an identifier, you can use `yourname` `email` or even a `project name`
+
+Example:
+
+``` bash
+ssh-keygen -t rsa -b 4096 -C "sandraolis@devops-stage1"
+
+ssh-keygen -t rsa -b 4096 -C "sandraolis-laptop"
+
+ssh-keygen -t rsa -b 4096 -C "stage1-project-key"
+```
+
+- When prompted for filename → **pressed Enter** (default: ~/.ssh/id_rsa)
+- When asked for passphrase → left it empty (for automation simplicity).
+
+The above command would create this:
+
+``` bash
+~/.ssh/id_rsa       ← private key
+~/.ssh/id_rsa.pub   ← public key
+```
+
+## 🧭 Step 2 — Copy SSH Key to the Remote Server.
+
+I added my public key to the authorized_keys on my EC2 instance to allow key-based login
+
+``` bash
+ssh-copy-id -i ~/.ssh/id_rsa.pub ubuntu@<EC2_PUBLIC_IP>
+```
+NB: if its fails that is because the SSH keys is not inside the `~/.ssh` directly with proper permissions, otherwise SSH will reject them for security reasons.
+
+To do this: I moved my keys to SSH directory
+
+``` bash
+mv /mnt/c/Users/DELL/Downloads/devops-deploy/project-key.pem ~/.ssh/
+```
+
+Then confirm its there
+
+``` bash
+ls -l ~/.ssh/
+```
+
+![](./Images/1.%20ssh.png)
+
+Set secure permission
+- SSH requires that `.pem` keys have read-only access for the owner:
+
+``` bash
+chmod 400 ~/.ssh/project-key.pem
+```
+
+verify the permission
+
+``` bash
+ls -l ~/.ssh/project-key.pem
+```
+
+![](./Images/2.%20permission.png)
+
+
+- When prompted for password → I entered the EC2 password (or you can use your `.pem` file temporarily)
+- Then I tested the connection:
+
+``` bash
+ssh -i ~/.ssh/project-key.pem ubuntu@50.17.9.26
+```
+
+✅ If it logged in without asking for a password, SSH automation was successful
+
+![](./Images/3.%20ssh-%20successfully.png)
+
+
+## NEXT:
+
+⚙️ In simple words:
+
+🖥️ In my local computer / WSL:
+- I write the script
+- I push code to GitHub
+- I connect to EC2 via SSH
+- I run the deploy script
+☁️ Remote (EC2):
+- My deploy script installs Docker + Nginx
+- Runs my app container
+- Hosts the website
+
+I cloned the project repo to my local machine and navigated into the project
+
+- The `deploy.sh` will automatically:
+- Connect to EC2 via SSH
+- Install required tools
+- Run your container
+- Configure Nginx reverse proxy
+
+
+## 🧰 Step 3 — Add SSH Check Inside `deploy.sh`
+
+To make sure my script only continues when SSH is working, I included a connectivity test
+
+``` bash
+echo "[INFO] Testing SSH connection..."
+if ! ssh -o BatchMode=yes -o ConnectTimeout=10 $REMOTE_USER@$REMOTE_HOST "echo SSH_OK" &>/dev/null; then
+  echo "[ERROR] Unable to establish SSH connection. Check your key or host IP." >&2
+  exit 1
+fi
+```
+
+- The -o BatchMode=yes flag makes SSH non-interactive (no password prompts)
+- -o ConnectTimeout=10 prevents hanging
+- If it fails, the script exits gracefully with an error message.
+
+- The output whould look like this
+
+``` bash
+[INFO] Testing SSH connection...
+[INFO] SSH connection verified successfully.
+```
+
+## ⚙️ Step 4 — Automate Remote Commands via SSH
+
+I used SSH to run commands on the remote EC2 server directly from the Bash script:
+
+``` bash
+ssh $REMOTE_USER@$REMOTE_HOST <<'EOF'
+  set -e
+  echo "[INFO] Updating server packages..."
+  sudo apt update -y
+  sudo apt install -y docker.io nginx git
+  sudo systemctl enable docker nginx
+  sudo systemctl start docker nginx
+EOF
+```
+
+Explanation:
+- Everything between <<'EOF' and EOF is executed remotely.
+- The single quotes around 'EOF' prevent local variable expansion — so remote commands stay consistent.
+- Any error on the remote host will abort the script because of set -e.
+
+✅ This allowed me to fully automate server setup without do it manually.
+
+
+## 🐳 Step 5 — Deploy Docker App Over SSH
+
+Later in the same script, I used SSH again to:
+- Clone my GitHub repo on the server
+- Build the Docker image
+- Run the container
+
+``` bash
+ssh $REMOTE_USER@$REMOTE_HOST <<'EOF'
+  cd ~
+  if [ ! -d "deployment-project" ]; then
+    git clone -b main https://github.com/Sandraolis/deployment-project.git
+  else
+    cd deployment-project && git pull origin main
+  fi
+
+  docker build -t stage1-app .
+  docker stop stage1-app || true
+  docker rm stage1-app || true
+  docker run -d -p 8080:80 --name stage1-app stage1-app
+EOF
+```
+
+This ensures that:
+- If the repo already exists → it updates instead of recloning
+- Old container is removed to prevent “port already in use” errors
+- New container starts cleanly every time
+
+
+## 🧩 Step 6 — Verify Remote Deployment (Via SSH + Curl)
+
+After the container was up, I verified deployment using another remote SSH command:
+
+``` bash
+if ssh $REMOTE_USER@$REMOTE_HOST "curl -s http://localhost:8080 | grep -q 'Welcome to DevOps'"; then
+  echo "[SUCCESS] Application deployed successfully!"
+else
+  echo "[FAILURE] Deployment check failed."
+  exit 1
+fi
+```
+
+✅ If the page responded with your custom message, the deployment was marked successful.
+
+### 🧾 Summary of SSH Automation Flow in deploy.sh
+
+1. Test Connection
+
+``` bash
+ssh -o BatchMode=yes $REMOTE_USER@$REMOTE_HOST "echo SSH_OK"
+```
+
+2. Run remote setup
+
+``` bash
+ssh $REMOTE_USER@$REMOTE_HOST 'sudo apt update -y && sudo apt install -y docker.io nginx git'
+```
+
+3. Pull laest code
+
+``` bash
+ssh $REMOTE_USER@$REMOTE_HOST 'cd ~/deployment-project && git pull'
+```
+
+4. Run Docker command
+
+``` bash
+ssh $REMOTE_USER@$REMOTE_HOST 'docker run -d -p 8080:80 stage1-app'
+```
+
+5. Validate deployment
+
+``` bash
+ssh $REMOTE_USER@$REMOTE_HOST 'curl -s localhost:8080'
+```
+
+
+
+After the SSH Automation, I then move on to setting up my working environment.....
+
+
+
 ## 🪜 Step 1 — Set Up Your Working Environmen
 Tools used:
 - VS Code – to write and edit scripts locally
