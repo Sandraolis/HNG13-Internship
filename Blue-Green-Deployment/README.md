@@ -352,7 +352,7 @@ curl -X POST http://localhost:8081/chaos/stop
 # After all these were tested locally, I pushed to my github repository;
 
 ### Then
-- Spinned up an EC2 server with inbound rule `8080`, `8081`, `8082` traffic from anywhere
+- Spinned up an EC2 server with inbound rule `8080`, `8081`, `8082` and `SSH 22` traffic from anywhere
 - SSH into the server
 - Installed docker compose
 
@@ -363,7 +363,7 @@ sudo systemctl enable docker
 sudo systemctl start docker
 ```
 
-Confirm your installation and the version
+Confirm my installation and the version
 
  ``` bash
  docker --version
