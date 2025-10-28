@@ -294,7 +294,7 @@ curl -X POST "http://localhost:8081/chaos/start?mode=error"
 ![](./Images/2.%20start-chaos.png)
 
 
-##### Then immediately checked the Nginx endpoint:
+### Then immediately checked the Nginx endpoint:
 
 ``` bash
 curl -i http://localhost:8080/version
