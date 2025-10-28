@@ -349,9 +349,10 @@ sleep 5
 curl -X POST http://localhost:8081/chaos/stop
 ```
 
-# After all these were tested locally, i pushed to my github repository;
-The,
-- Spinned up an EC2 server
+# After all these were tested locally, I pushed to my github repository;
+
+### Then
+- Spinned up an EC2 server with inbound rule `8080`, `8081`, `8082` traffic from anywhere
 - SSH into the server
 - Installed docker compose
 
