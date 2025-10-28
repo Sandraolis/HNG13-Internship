@@ -349,6 +349,41 @@ sleep 5
 curl -X POST http://localhost:8081/chaos/stop
 ```
 
+# After all these were tested locally, i pushed to my github repository;
+The,
+- Spinned up an EC2 server
+- SSH into the server
+- Installed docker compose
+
+``` bash
+sudo apt update
+sudo apt install -y docker.io docker-compose
+sudo systemctl enable docker
+sudo systemctl start docker
+```
+
+Confirm your installation and the version
+
+ ``` bash
+ docker --version
+ docker compose version
+ ```
+
+ - Then I cloned my project repo into my server and navigated into it.
+ - Ran the container
+
+ ``` bash
+ sudo docker compose up -d
+ sudo docker ps
+ ```
+
+ - Baseline 
+ - Induce chaos on blue
+ - Checked the nginx endpoint
+ - Stopped chaos
+ - Finally, confirm recovery
+
+
 ## 7. Troubleshooting I encountered & how I fixed them
 
 `docker-compose` **missing** — fixed by using `docker compose` (Compose V2) or installing Compose plugin / enabling Docker Desktop WSL integration.
