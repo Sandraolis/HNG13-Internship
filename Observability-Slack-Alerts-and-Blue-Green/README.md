@@ -432,29 +432,6 @@ ALERT_COOLDOWN_SEC=300
 
 ## Added bash script `monitor_failover.sh` and `notify_slack.sh` these scripts were created at the root directory
 
-ready-to-run command that simulated failover on my `blue-green` setup and trigger `Slack` so you can test end-to-end.
-
-### 4. Commands used
-
-I ensure my docker machine was running
-
-``` 
-docker ps
-docker image
-docker compose down -v
-docker ps
-```
-
-``` bash
-# from project root
-docker compose up -d --build
-docker compose ps
-docker compose logs -f alert_watcher
-docker compose exec alert_watcher sh   # to run debug commands inside
-```
-
-
-1. Using a bash script to send Slack Message
 
 # notify_slack.sh
 
@@ -480,6 +457,28 @@ curl -X POST -H 'Content-type: application/json' \
 ``` bash
 chmod +x notify_slack.sh
 ```
+
+
+### 4. Commands used
+
+I ensure my docker machine was running
+
+``` 
+docker ps
+docker image
+docker compose down -v
+docker ps
+```
+
+``` bash
+# from project root
+docker compose up -d --build
+docker compose ps
+docker compose logs -f alert_watcher
+docker compose exec alert_watcher sh   # to run debug commands inside
+```
+
+ready-to-run command that simulated failover on my `blue-green` setup and trigger `Slack` so you can test end-to-end.
 
 ### Trigger failover stimulation
 I stopped my primary container
